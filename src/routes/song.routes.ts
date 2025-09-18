@@ -9,12 +9,11 @@ const router = Router();
 const songController = new SongController();
 const uploadMiddleware = new UploadMiddleware();
 
-// Routes
+// Routes for creating a song
 router.post(
   '/',
+  uploadMiddleware.parseOnly, 
   validate(songSchema),
-  uploadMiddleware.uploadSingle('audio'),
-  uploadMiddleware.handleUploadError,
   songController.createSong
 );
 

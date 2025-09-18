@@ -24,12 +24,16 @@ class SongController {
       const { title, artist, album, genre, duration } = req.body;
 
       // Check if file was uploaded(attached)
-      if (!req.file || !req.file.location) {
+      if (!req.file) {
         throw ApiError.badRequest('Audio file is required');
       }
 
-      // Process the uploaded file
-      const fileResult = this.s3Service.processMulterFile(req.file);
+      // Upload file to S3
+      const uploadResult: FileUploadResult = await this.s3Service.uploadFile(
+        req.file.buffer,
+        req.file.originalname,
+        req.file.mimetype,
+      );
 
       const songData: ISongCreate = {
         title: title.trim(),
@@ -37,9 +41,9 @@ class SongController {
         album: album.trim(),
         genre: genre.trim(),
         duration: duration ? parseInt(duration) : undefined,
-        fileUrl: fileResult.url,
-        fileName: fileResult.originalName,
-        fileSize: fileResult.size
+        fileUrl: uploadResult.url,
+        fileName: uploadResult.originalName,
+        fileSize: uploadResult.size
       };
 
       const song = await this.songService.createSong(songData);

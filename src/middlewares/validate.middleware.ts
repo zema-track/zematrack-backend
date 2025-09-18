@@ -5,7 +5,8 @@ import { ApiError } from '../utils/api-error';
 export const validate = (schema: Schema) => {
   return async (req: Request, res: Response, next: NextFunction) => {
     try {
-      await schema.parseAsync(req.body);
+      const data = { ...req.body, ...(req.files ? { files: req.files } : {}) };
+      await schema.parseAsync(data);
       next();
     } catch (error) {
       const validationErrors = (error as any).errors ? (error as any).errors : [];

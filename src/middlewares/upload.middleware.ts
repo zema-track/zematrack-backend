@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import S3UploadService from '../services/s3-upload.service';
+import multer from 'multer';
 
 class UploadMiddleware {
   private s3Service: S3UploadService;
@@ -7,6 +8,11 @@ class UploadMiddleware {
   constructor() {
     this.s3Service = new S3UploadService();
   }
+
+  parseOnly = multer({ 
+    storage: multer.memoryStorage(),
+    limits: { fileSize: 50 * 1024 * 1024 } 
+  }).single('audio');
 
   // Single file upload middleware
   uploadSingle(fieldName: string) {
