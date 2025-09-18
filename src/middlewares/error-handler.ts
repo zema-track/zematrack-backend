@@ -1,65 +1,75 @@
 import { Request, Response, NextFunction } from 'express';
+import { ZodError } from 'zod';
 import { ApiError } from '../utils/api-error';
-import { ApiResponse } from '../utils/api-response';
-import { config } from '../config';
+import mongoose from 'mongoose';
 
 export const errorHandler = (
-  err: any,
+  err: Error,
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
-  // Default error values
-  let statusCode = 500;
-  let message = 'Internal server error';
-  let errors: any[] = [];
 
-  // Handle ApiError instances
-  if (err instanceof ApiError) {
-    statusCode = err.statusCode;
-    message = err.message;
-    errors = err.errors;
-  }
-  // Mongoose validation errors
-  else if (err.name === 'ValidationError') {
-    statusCode = 400;
-    message = 'Validation failed';
-    errors = Object.values(err.errors).map((error: any) => ({
+
+  // Handle Mongoose validation errors
+  if (err instanceof mongoose.Error.ValidationError) {
+    const errors = Object.values(err.errors).map(error => ({
       field: error.path,
       message: error.message
     }));
-  }
-  // Mongoose cast errors
-  else if (err.name === 'CastError') {
-    statusCode = 400;
-    message = 'Invalid data format';
-    errors = [{ field: err.path, message: `Invalid ${err.path}` }];
-  }
-  // Handle JWT errors
-  else if (err.name === 'JsonWebTokenError') {
-    statusCode = 401;
-    message = 'Invalid token';
-  }
-  else if (err.name === 'TokenExpiredError') {
-    statusCode = 401;
-    message = 'Token expired';
-  }
-  // unknown unexpected errors
-  else {
-    console.error('Unexpected error:', err);
+    return res.status(400).json({
+      success: false,
+      message: 'Validation failed',
+      errors
+    });
   }
 
-  const errorResponse = new ApiResponse(statusCode, null, message);
-  
-  // Add errors array if exists
-  if (errors.length > 0) {
-    (errorResponse as any).errors = errors;
+  // Handle Mongoose duplicate key errors
+  if ((err as any).code === 11000) {
+    const field = Object.keys((err as any).keyValue)[0];
+    const value = (err as any).keyValue[field];
+    return res.status(400).json({
+      success: false,
+      message: `Duplicate value error`,
+      errors: [{
+        field,
+        message: `A record with this ${field} (${value}) already exists`
+      }]
+    });
   }
 
-  // Add stack trace in development
-  if (config.environment === 'development') {
-    (errorResponse as any).stack = err.stack;
+  // Handle Zod validation errors
+  if (err instanceof ZodError) {
+    return res.status(400).json({
+      success: false,
+      message: 'Validation failed',
+      errors: err.errors.map(error => ({
+        field: error.path.join('.'),
+        message: error.message
+      }))
+    });
   }
 
-  res.status(statusCode).json(errorResponse);
+  // Handle custom ApiError
+  if (err instanceof ApiError) {
+    return res.status(err.statusCode).json({
+      success: false,
+      message: err.message,
+      errors: err.errors.length > 0 ? err.errors : undefined
+    });
+  }
+
+  // Handle unknown errors
+  const statusCode = 500;
+  const message = process.env.NODE_ENV === 'production'
+    ? 'Internal server error'
+    : err.message;
+
+  return res.status(statusCode).json({
+    success: false,
+    message,
+    ...(process.env.NODE_ENV === 'development' && {
+      stack: err.stack
+    })
+  });
 };

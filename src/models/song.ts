@@ -5,7 +5,7 @@ import mongoose, { Schema, Document } from 'mongoose';
 export interface ISong {
   title: string;
   artist: string;
-  album: string;
+  album?: string;
   genre: string;
   duration?: number;
   fileUrl?: string;
@@ -19,7 +19,7 @@ export interface ISong {
 export interface ISongCreate {
   title: string;
   artist: string;
-  album: string;
+  album?: string;
   genre: string;
   duration?: number;
   fileUrl?: string;
@@ -45,20 +45,6 @@ export interface ISongFilter {
   search?: string;
 }
 
-export interface ISongStats {
-  totalSongs: number;
-  totalArtists: number;
-  totalAlbums: number;
-  totalGenres: number;
-  songsByGenre: { [genre: string]: number };
-  songsByArtist: { [artist: string]: number };
-  albumsByArtist: { [artist: string]: number };
-  songsInAlbum: { [album: string]: number };
-  averageDuration?: number;
-  totalDuration?: number;
-}
-
-
 export interface ISongDocument extends ISong, Document {}
 
 const songSchema = new Schema<ISongDocument>(
@@ -77,7 +63,6 @@ const songSchema = new Schema<ISongDocument>(
     },
     album: {
       type: String,
-      required: [true, 'Album name is required'],
       trim: true,
       maxlength: [200, 'Album name cannot exceed 200 characters']
     },

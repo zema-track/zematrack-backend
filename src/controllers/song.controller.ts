@@ -23,29 +23,27 @@ class SongController {
     try {
       const { title, artist, album, genre, duration } = req.body;
 
-      // Validate required fields
-      if (!title || !artist || !album || !genre) {
-        throw ApiError.badRequest('Title, artist, album, and genre are required');
+      // Check if file was uploaded(attached)
+      if (!req.file || !req.file.location) {
+        throw ApiError.badRequest('Audio file is required');
       }
+
+      // Process the uploaded file
+      const fileResult = this.s3Service.processMulterFile(req.file);
 
       const songData: ISongCreate = {
         title: title.trim(),
         artist: artist.trim(),
         album: album.trim(),
         genre: genre.trim(),
-        duration: duration ? parseInt(duration) : undefined
+        duration: duration ? parseInt(duration) : undefined,
+        fileUrl: fileResult.url,
+        fileName: fileResult.originalName,
+        fileSize: fileResult.size
       };
 
-      // Handle file upload if present
-      if (req.file && req.file.location) {
-        const fileResult = this.s3Service.processMulterFile(req.file);
-        songData.fileUrl = fileResult.url;
-        songData.fileName = fileResult.originalName;
-        songData.fileSize = fileResult.size;
-      }
-
       const song = await this.songService.createSong(songData);
-      
+
       const response = ApiResponse.created(song, 'Song created successfully');
       res.status(201).json(response);
     } catch (error) {
