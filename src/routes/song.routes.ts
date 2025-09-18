@@ -29,4 +29,10 @@ router.get(
   songController.getSongById
 )
 
+// route for updating a song
+router.patch(
+  '/:id',
+  songController.updateSong
+)
+
 export default router;

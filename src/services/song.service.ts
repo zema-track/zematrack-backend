@@ -2,7 +2,7 @@ import { ApiError } from '../utils/api-error';
 import S3UploadService from './s3-upload.service';
 import {
   ISong, ISongCreate, Song, ISongUpdate,
-  ISongFilter, ISongStats, ISongDocument
+  ISongFilter
 } from '../models';
 
 interface PaginatedResult<T> {
@@ -123,6 +123,31 @@ class SongService {
     } catch (error) {
       if (error instanceof ApiError) throw error;
       throw ApiError.internal('Failed to fetch song');
+    }
+  }
+
+  // Update song
+  async updateSong(id: string, updateData: ISongUpdate): Promise<ISong> {
+    try {
+      // prepare update data
+      const cleanUpdateData = Object.fromEntries(
+        Object.entries(updateData).filter(([key, value]) => {
+          if (value === undefined) return false;
+          if (typeof value === 'string' && value.trim().length === 0) return false;
+          return true;
+        })
+      );
+
+      if (Object.keys(cleanUpdateData).length === 0) {
+        throw ApiError.badRequest('No valid update data provided');
+      }
+
+      const song = await Song.findByIdAndUpdate(id, cleanUpdateData, { new: true });
+      if (!song) throw ApiError.notFound('Song not found');
+      return song as ISong;
+    } catch (error) {
+      if (error instanceof ApiError) throw error;
+      throw ApiError.internal('Failed to update song');
     }
   }
 

@@ -3,7 +3,7 @@ import SongService from '../services/song.service';
 import S3UploadService, { FileUploadResult } from '../services/s3-upload.service';
 import { ApiResponse, ApiResponseWithPagination } from '../utils/api-response';
 import { ApiError } from '../utils/api-error';
-import { ISongCreate, ISongUpdate, ISongFilter } from '../models';
+import { ISongCreate, ISongFilter } from '../models';
 
 interface MulterRequest extends Request {
   file?: Express.Multer.File & { location?: string; key?: string };
@@ -111,6 +111,17 @@ class SongController {
     }
   };
 
+  // Update song
+  updateSong = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { id } = req.params;
+      const song = await this.songService.updateSong(id, req.body);
+      const response = ApiResponse.success(song, 'Song updated successfully');
+      res.status(200).json(response);
+    } catch (error) {
+      next(error);
+    }
+  };
 
 }
 
