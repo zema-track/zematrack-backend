@@ -99,6 +99,19 @@ class SongController {
     }
   };
 
+  // Get single song by ID
+  getSongById = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { id } = req.params;
+      const song = await this.songService.getSongById(id);
+      const response = ApiResponse.success(song, 'Song retrieved successfully');
+      res.status(200).json(response);
+    } catch (error) {
+      next(error);
+    }
+  };
+
+
 }
 
 export default SongController;

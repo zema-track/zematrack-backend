@@ -114,6 +114,18 @@ class SongService {
     }
   }
 
+  // Get single song by ID
+  async getSongById(id: string): Promise<ISong> {
+    try {
+      const song = await Song.findById(id);
+      if (!song) throw ApiError.notFound('Song not found');
+      return song as ISong;
+    } catch (error) {
+      if (error instanceof ApiError) throw error;
+      throw ApiError.internal('Failed to fetch song');
+    }
+  }
+
 }
 
 

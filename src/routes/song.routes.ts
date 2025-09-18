@@ -23,4 +23,10 @@ router.get(
   songController.getSongs
 )
 
+// route for getting a single song by id
+router.get(
+  '/:id',
+  songController.getSongById
+)
+
 export default router;
