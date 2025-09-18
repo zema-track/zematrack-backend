@@ -6,7 +6,7 @@ class DatabaseConnection {
   private connectionString: string;
 
   private constructor() {
-    this.connectionString = config.mongodbUri
+    this.connectionString = config.mongodbUri || '';
   }
 
   static getInstance(): DatabaseConnection {
