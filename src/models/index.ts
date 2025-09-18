@@ -1,3 +1,6 @@
 
 
-export { Song, ISongDocument, ISong, ISongCreate, ISongUpdate, ISongFilter, ISongStats } from './song'
+export {
+  Song, ISongDocument, ISong, ISongCreate,
+  ISongUpdate, ISongFilter, ISongStats, IStatsFilter, Genre
+} from './song'

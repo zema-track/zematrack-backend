@@ -1,12 +1,28 @@
 
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose, { Schema, Document, Model } from 'mongoose';
+
+export enum Genre {
+  POP = "Pop",
+  ROCK = "Rock",
+  METAL = "Metal",
+  HIP_HOP = "Hip-Hop",
+  RNB_SOUL = "R&B/Soul",
+  ELECTRONIC = "Electronic",
+  JAZZ = "Jazz",
+  BLUES = "Blues",
+  COUNTRY_FOLK = "Country/Folk",
+  REGGAE_SKA = "Reggae/Ska",
+  LATIN_WORLD = "Latin/World",
+  CLASSICAL = "Classical",
+  OTHER = "Other"
+}
 
 
 export interface ISong {
   title: string;
   artist: string;
   album?: string;
-  genre: string;
+  genre: Genre;
   duration?: number;
   fileUrl?: string;
   fileName?: string;
@@ -20,7 +36,7 @@ export interface ISongCreate {
   title: string;
   artist: string;
   album?: string;
-  genre: string;
+  genre: Genre;
   duration?: number;
   fileUrl?: string;
   fileName?: string;
@@ -31,7 +47,7 @@ export interface ISongUpdate {
   title?: string;
   artist?: string;
   album?: string;
-  genre?: string;
+  genre?: Genre;
   duration?: number;
   fileUrl?: string;
   fileName?: string;
@@ -39,11 +55,36 @@ export interface ISongUpdate {
 }
 
 export interface ISongFilter {
-  genre?: string;
+  genre?: Genre;
   artist?: string;
   album?: string;
   title?: string;
   search?: string;
+}
+
+export interface IStatsFilter {
+  startDate?: Date;
+  endDate?: Date;
+  genre?: Genre;
+  artist?: string;
+  album?: string;
+}
+
+export interface ISongStats {
+  totalSongs: number;
+  totalArtists: number;
+  totalAlbums: number;
+  songsByGenre: Record<Genre, number>;
+  artistStats: Array<{
+    artist: string;
+    totalSongs: number;
+    totalAlbums: number;
+  }>;
+  albumStats: Array<{
+    album: string;
+    artist: string;
+    totalSongs: number;
+  }>;
 }
 
 export interface ISongDocument extends ISong, Document {}
@@ -70,8 +111,10 @@ const songSchema = new Schema<ISongDocument>(
     genre: {
       type: String,
       required: [true, 'Genre is required'],
-      trim: true,
-      maxlength: [50, 'Genre cannot exceed 50 characters']
+      enum: {
+        values: Object.values(Genre),
+        message: 'Invalid genre. Must be one of: ' + Object.values(Genre).join(', ')
+      }
     },
     duration: {
       type: Number,

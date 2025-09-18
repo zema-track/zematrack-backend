@@ -3,7 +3,7 @@ import SongService from '../services/song.service';
 import S3UploadService, { FileUploadResult } from '../services/s3-upload.service';
 import { ApiResponse, ApiResponseWithPagination } from '../utils/api-response';
 import { ApiError } from '../utils/api-error';
-import { ISongCreate, ISongFilter } from '../models';
+import { ISongCreate, ISongFilter, Genre } from '../models';
 
 interface MulterRequest extends Request {
   file?: Express.Multer.File & { location?: string; key?: string };
@@ -71,7 +71,10 @@ class SongController {
       } = req.query;
 
       const filter: ISongFilter = {};
-      if (genre) filter.genre = genre as string;
+      const genreValue = genre as string;
+      if (genreValue && Object.values(Genre).includes(genreValue as Genre)) {
+        filter.genre = genreValue as Genre;
+      }
       if (artist) filter.artist = artist as string;
       if (album) filter.album = album as string;
       if (title) filter.title = title as string;

@@ -2,7 +2,7 @@ import { ApiError } from '../utils/api-error';
 import S3UploadService from './s3-upload.service';
 import {
   ISong, ISongCreate, Song, ISongUpdate, ISongDocument,
-  ISongFilter
+  ISongFilter, IStatsFilter, ISongStats, Genre
 } from '../models';
 
 interface PaginatedResult<T> {
@@ -178,6 +178,5 @@ async deleteSong(id: string): Promise<void> {
 }
 
 }
-
 
 export default SongService;
