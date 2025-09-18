@@ -1,5 +1,5 @@
 import mongoose, { Model, Document, SortOrder, PopulateOptions } from 'mongoose';
-import { ApiError } from "./api-error.js";
+import { ApiError } from "./api-error";
 
 type ModelType<T> = T & Document;
 
