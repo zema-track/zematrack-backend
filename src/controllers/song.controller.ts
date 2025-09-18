@@ -123,6 +123,17 @@ class SongController {
     }
   };
 
+  // Delete song
+  deleteSong = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { id } = req.params;
+      await this.songService.deleteSong(id);
+      const response = ApiResponse.success(null, 'Song deleted successfully');
+      res.status(200).json(response);
+    } catch (error) {
+      next(error);
+    }
+  };
 }
 
 export default SongController;

@@ -35,4 +35,10 @@ router.patch(
   songController.updateSong
 )
 
+// route for deleting a song
+router.delete(
+  '/:id',
+  songController.deleteSong
+)
+
 export default router;

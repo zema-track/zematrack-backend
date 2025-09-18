@@ -1,7 +1,7 @@
 import { ApiError } from '../utils/api-error';
 import S3UploadService from './s3-upload.service';
 import {
-  ISong, ISongCreate, Song, ISongUpdate,
+  ISong, ISongCreate, Song, ISongUpdate, ISongDocument,
   ISongFilter
 } from '../models';
 
@@ -150,6 +150,32 @@ class SongService {
       throw ApiError.internal('Failed to update song');
     }
   }
+
+// Delete song (soft delete)
+async deleteSong(id: string): Promise<void> {
+  try {
+    // get the song to check if it has a file URL
+    const song = await this.getSongById(id);
+
+    // delete file from S3
+    if (song.fileUrl) {
+      try {
+        const url = new URL(song.fileUrl);
+        const key = url.pathname.substring(1);
+        await this.s3Service.deleteFile(key);
+      } catch (s3Error) {
+        throw ApiError.internal('Failed to delete file from S3');
+      }
+    }
+
+    await Song.findByIdAndDelete(id);
+    return;
+
+  } catch (error) {
+    if (error instanceof ApiError) throw error;
+    throw ApiError.internal('Failed to delete song');
+  }
+}
 
 }
 
