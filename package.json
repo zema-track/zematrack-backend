@@ -25,9 +25,11 @@
   },
   "homepage": "https://github.com/zema-track/zematrack-backend#readme",
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.891.0",
+    "@aws-sdk/lib-storage": "^3.891.0",
+    "@aws-sdk/s3-request-presigner": "^3.891.0",
     "@types/multer": "^2.0.0",
     "@types/multer-s3": "^3.0.3",
-    "aws-sdk": "^2.1692.0",
     "bcrypt": "^6.0.0",
     "cors": "^2.8.5",
     "dotenv": "^17.2.2",
