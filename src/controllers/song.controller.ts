@@ -55,6 +55,50 @@ class SongController {
     }
   };
 
+   // Get all songs
+  getSongs = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const {
+        page = '1',
+        limit = '10',
+        sortBy = 'createdAt',
+        sortOrder = 'desc',
+        genre,
+        artist,
+        album,
+        title,
+        search
+      } = req.query;
+
+      const filter: ISongFilter = {};
+      if (genre) filter.genre = genre as string;
+      if (artist) filter.artist = artist as string;
+      if (album) filter.album = album as string;
+      if (title) filter.title = title as string;
+      if (search) filter.search = search as string;
+
+      const result = await this.songService.getSongs(
+        filter,
+        parseInt(page as string),
+        parseInt(limit as string),
+        sortBy as string,
+        sortOrder as 'asc' | 'desc'
+      );
+
+      const response = ApiResponseWithPagination.paginated(
+        result.items,
+        result.total,
+        result.page,
+        result.limit,
+        'Songs retrieved successfully'
+      );
+
+      res.json(response);
+    } catch (error) {
+      next(error);
+    }
+  };
+
 }
 
 export default SongController;

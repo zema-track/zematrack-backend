@@ -42,6 +42,7 @@ export interface ISongFilter {
   genre?: string;
   artist?: string;
   album?: string;
+  title?: string;
   search?: string;
 }
 
@@ -104,5 +105,10 @@ songSchema.index({ artist: 1, album: 1 });
 songSchema.index({ genre: 1 });
 songSchema.index({ createdAt: -1 });
 songSchema.index({ deletedAt: 1 });
+
+// Index fields commonly used in search
+songSchema.index({ title: 1 });
+songSchema.index({ artist: 1 });
+songSchema.index({ album: 1 });
 
 export const Song = mongoose.model<ISongDocument>('Song', songSchema);

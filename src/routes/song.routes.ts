@@ -17,4 +17,10 @@ router.post(
   songController.createSong
 );
 
+// route for getting all songs
+router.get(
+  '/',
+  songController.getSongs
+)
+
 export default router;

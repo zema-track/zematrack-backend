@@ -1,10 +1,19 @@
-import { DatabaseService } from '../utils/database-service';
 import { ApiError } from '../utils/api-error';
 import S3UploadService from './s3-upload.service';
 import {
   ISong, ISongCreate, Song, ISongUpdate,
   ISongFilter, ISongStats, ISongDocument
 } from '../models';
+
+interface PaginatedResult<T> {
+  items: T[];
+  total: number;
+  page: number;
+  limit: number;
+  pages: number;
+  hasNext: boolean;
+  hasPrev: boolean;
+}
 
 class SongService {
   private s3Service: S3UploadService;
@@ -16,13 +25,92 @@ class SongService {
   // Create a new song
   async createSong(songData: ISongCreate): Promise<ISong> {
     try {
-      
-      const song = await DatabaseService.create<ISong>(Song, songData);
+      const song = await Song.create(songData);
       return song;
-
-    } catch (error) {
+    } catch (error: any) {
       if (error instanceof ApiError) throw error;
+      if (error.code === 11000) {
+        const field = Object.keys(error.keyValue)[0];
+        throw ApiError.conflict(`${field} already exists`);
+      }
       throw ApiError.internal('Failed to create song');
+    }
+  }
+
+  // Get all songs with filtering and pagination
+  async getSongs(
+    filter: ISongFilter = {},
+    page: number = 1,
+    limit: number = 10,
+    sortBy: string = 'createdAt',
+    sortOrder: 'asc' | 'desc' = 'desc'
+  ): Promise<PaginatedResult<ISong>> {
+    try {
+      // Build filter object
+      const Filter: any = { };
+
+      // Genre filter
+      if (filter.genre) {
+        Filter.genre = new RegExp(filter.genre, 'i');
+      }
+
+      // Artist filter
+      if (filter.artist) {
+        Filter.artist = new RegExp(filter.artist, 'i');
+      }
+
+      // Album filter
+      if (filter.album) {
+        Filter.album = new RegExp(filter.album, 'i');
+      }
+
+      // Title filter
+      if (filter.title) {
+        Filter.title = new RegExp(filter.title, 'i');
+      }
+
+      // Search across multiple fields with partial matching
+      if (filter.search) {
+        const searchRegex = new RegExp(filter.search, 'i');
+        Filter.$or = [
+          { title: searchRegex },
+          { artist: searchRegex },
+          { album: searchRegex }
+        ];
+      }
+
+      // Sort configuration
+      const sort: any = {};
+      sort[sortBy] = sortOrder === 'asc' ? 1 : -1;
+
+      // Pagination
+      const skip = (page - 1) * limit;
+      const actualLimit = Math.min(limit, 100);
+      const actualPage = Math.max(page, 1);
+
+      // Execute both queries in parallel
+      const [songs, total] = await Promise.all([
+        Song.find(Filter)
+          .sort(sort)
+          .skip(skip)
+          .limit(actualLimit)
+          .exec(),
+        Song.countDocuments(Filter)
+      ]);
+
+      const pages = Math.ceil(total / actualLimit);
+
+      return {
+        items: songs,
+        total,
+        page: actualPage,
+        limit: actualLimit,
+        pages,
+        hasNext: actualPage < pages,
+        hasPrev: actualPage > 1
+      };
+    } catch (error) {
+      throw ApiError.internal('Failed to fetch songs');
     }
   }
 
