@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { ApiError } from '../utils/api-error';
 import { ApiResponse } from '../utils/api-response';
+import { config } from '../config';
 
 export const errorHandler = (
   err: any,
@@ -56,7 +57,7 @@ export const errorHandler = (
   }
 
   // Add stack trace in development
-  if (process.env.NODE_ENV === 'development') {
+  if (config.environment === 'development') {
     (errorResponse as any).stack = err.stack;
   }
 

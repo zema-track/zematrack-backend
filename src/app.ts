@@ -5,9 +5,6 @@ import morgan from "morgan";
 import { logger, captureStartTime } from './config/logger';
 import { errorHandler } from './middlewares/error-handler';
 import routes from './routes';
-import dotenv from 'dotenv';
-
-dotenv.config();
 
 const app: Application = express();
 

@@ -1,11 +1,12 @@
 import mongoose from 'mongoose';
+import { config } from '.';
 
 class DatabaseConnection {
   private static instance: DatabaseConnection;
   private connectionString: string;
 
   private constructor() {
-    this.connectionString = process.env.MONGODB_URI || 'mongodb://localhost:27017/zematrack';
+    this.connectionString = config.mongodbUri
   }
 
   static getInstance(): DatabaseConnection {
