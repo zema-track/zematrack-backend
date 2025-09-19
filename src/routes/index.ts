@@ -8,7 +8,6 @@ const router = Router();
 router.get('/health', (req: Request, res: Response) => {
   const response = ApiResponse.success({
     status: 'OK',
-    timestamp: new Date().toISOString(),
     uptime: process.uptime()
   }, 'Service is healthy');
   

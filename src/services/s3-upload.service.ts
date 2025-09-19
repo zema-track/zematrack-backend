@@ -37,9 +37,9 @@ class S3UploadService {
   // Generate unique filename
   private generateFileName(originalName: string): string {
     const extension = path.extname(originalName);
+    const baseName = path.basename(originalName, extension).replace(/[^a-zA-Z0-9-_]/g, '_');
     const timestamp = Date.now();
-    const randomBytes = crypto.randomBytes(6).toString('hex');
-    return `songs/${timestamp}-${randomBytes}${extension}`;
+    return `songs/${timestamp}-${baseName}${extension}`;
   }
 
   // File filter function
