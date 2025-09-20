@@ -23,6 +23,7 @@ class S3UploadService {
     'audio/mpeg', // .mp3
     'audio/wav',  // .wav
     'audio/mp4',  // .m4a
+    'audio/x-m4a', // .m4a
     'audio/aac',  // .aac
     'audio/ogg',  // .ogg
     'audio/flac', // .flac
