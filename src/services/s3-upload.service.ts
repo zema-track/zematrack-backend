@@ -87,17 +87,17 @@ class S3UploadService {
     originalName: string,
     mimeType: string
   ): Promise<FileUploadResult> {
+
+    // Validate file type
+    if (!this.allowedMimeTypes.includes(mimeType)) {
+      throw ApiError.badRequest('Invalid file type');
+    }
+    // Validate file size
+    if (buffer.length > this.maxFileSize) {
+      throw ApiError.badRequest('File size too large');
+    }
+    
     try {
-      // Validate file type
-      if (!this.allowedMimeTypes.includes(mimeType)) {
-        throw ApiError.badRequest('Invalid file type');
-      }
-
-      // Validate file size
-      if (buffer.length > this.maxFileSize) {
-        throw ApiError.badRequest('File size too large');
-      }
-
       const fileName = this.generateFileName(originalName);
 
       const upload = new Upload({
@@ -127,7 +127,7 @@ class S3UploadService {
 
     } catch (error) {
       console.error('S3 upload error:', error);
-      throw ApiError.internal('Failed to upload file to S3');
+      throw ApiError.internal('Failed to upload file');
     }
   }
   // Delete file from S3
@@ -141,7 +141,11 @@ class S3UploadService {
       await this.aws.s3.send(command);
     } catch (error) {
       console.error('S3 delete error:', error);
-      throw ApiError.internal('Failed to delete file from S3');
+
+      if (error instanceof ApiError) {
+        throw error;
+      }
+      throw ApiError.internal('Failed to upload file');
     }
   }
 

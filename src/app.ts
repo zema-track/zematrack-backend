@@ -2,7 +2,7 @@ import express, { Application } from "express";
 import cors from "cors";
 import helmet from "helmet";
 import { logger, captureStartTime } from './config/logger';
-import { errorHandler } from './middlewares/error-handler';
+import { errorHandler } from "./middlewares/error-handler";
 import routes from './routes';
 
 const app: Application = express();

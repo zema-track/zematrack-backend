@@ -38,7 +38,7 @@ class SongController {
       const songData: ISongCreate = {
         title: title.trim(),
         artist: artist.trim(),
-        album: album.trim(),
+        album: album ? album.trim() : undefined,
         genre: genre.trim(),
         duration: duration ? parseInt(duration) : undefined,
         fileUrl: uploadResult.url,
@@ -115,10 +115,29 @@ class SongController {
   };
 
   // Update song
-  updateSong = async (req: Request, res: Response, next: NextFunction) => {
+  updateSong = async (req: MulterRequest, res: Response, next: NextFunction) => {
     try {
       const { id } = req.params;
-      const song = await this.songService.updateSong(id, req.body);
+      let updateData = { ...req.body };
+
+      // Handle if a new audio file is attached
+      if (req.file) {
+        const uploadResult: FileUploadResult = await this.s3Service.uploadFile(
+          req.file.buffer,
+          req.file.originalname,
+          req.file.mimetype,
+        );
+
+        // Add audio file information to update data
+        updateData = {
+          ...updateData,
+          fileUrl: uploadResult.url,
+          fileName: uploadResult.originalName,
+          fileSize: uploadResult.size
+        };
+      }
+
+      const song = await this.songService.updateSong(id, updateData);
       const response = ApiResponse.success(song, 'Song updated successfully');
       res.status(200).json(response);
     } catch (error) {
@@ -130,8 +149,8 @@ class SongController {
   deleteSong = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { id } = req.params;
-      await this.songService.deleteSong(id);
-      const response = ApiResponse.success(null, 'Song deleted successfully');
+      const deletedSongId = await this.songService.deleteSong(id);
+      const response = ApiResponse.success(deletedSongId, 'Song deleted successfully');
       res.status(200).json(response);
     } catch (error) {
       next(error);

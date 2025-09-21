@@ -129,6 +129,9 @@ class SongService {
   // Update song
   async updateSong(id: string, updateData: ISongUpdate): Promise<ISong> {
     try {
+      // Get the existing song first
+      const existingSong = await this.getSongById(id);
+
       // prepare update data
       const cleanUpdateData = Object.fromEntries(
         Object.entries(updateData).filter(([key, value]) => {
@@ -142,6 +145,17 @@ class SongService {
         throw ApiError.badRequest('No valid update data provided');
       }
 
+      // If there's a new audio file URL, delete the old file from S3
+      if (cleanUpdateData.fileUrl && existingSong.fileUrl) {
+        try {
+          const url = new URL(existingSong.fileUrl);
+          const key = url.pathname.substring(1);
+          await this.s3Service.deleteFile(key);
+        } catch (s3Error) {
+          console.error('Failed to delete old file from S3:', s3Error);
+        }
+      }
+
       const song = await Song.findByIdAndUpdate(id, cleanUpdateData, { new: true });
       if (!song) throw ApiError.notFound('Song not found');
       return song as ISong;
@@ -152,7 +166,7 @@ class SongService {
   }
 
 // Delete song (soft delete)
-async deleteSong(id: string): Promise<void> {
+async deleteSong(id: string): Promise<{ _id: typeof id }> {
   try {
     // get the song to check if it has a file URL
     const song = await this.getSongById(id);
@@ -169,7 +183,7 @@ async deleteSong(id: string): Promise<void> {
     }
 
     await Song.findByIdAndDelete(id);
-    return;
+    return { _id: id };
 
   } catch (error) {
     if (error instanceof ApiError) throw error;
