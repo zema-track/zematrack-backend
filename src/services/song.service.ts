@@ -152,7 +152,7 @@ class SongService {
   }
 
 // Delete song (soft delete)
-async deleteSong(id: string): Promise<void> {
+async deleteSong(id: string): Promise<{ _id: typeof id }> {
   try {
     // get the song to check if it has a file URL
     const song = await this.getSongById(id);
@@ -169,7 +169,7 @@ async deleteSong(id: string): Promise<void> {
     }
 
     await Song.findByIdAndDelete(id);
-    return;
+    return { _id: id };
 
   } catch (error) {
     if (error instanceof ApiError) throw error;
