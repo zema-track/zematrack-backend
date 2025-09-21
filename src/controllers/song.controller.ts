@@ -38,7 +38,7 @@ class SongController {
       const songData: ISongCreate = {
         title: title.trim(),
         artist: artist.trim(),
-        album: album.trim(),
+        album: album ? album.trim() : undefined,
         genre: genre.trim(),
         duration: duration ? parseInt(duration) : undefined,
         fileUrl: uploadResult.url,
