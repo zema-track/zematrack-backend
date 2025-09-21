@@ -39,6 +39,7 @@ router.get(
 // route for updating a song
 router.patch(
   '/:id',
+  uploadMiddleware.parseOnly,
   validate(songUpdateSchema),
   songController.updateSong
 )
