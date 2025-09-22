@@ -2,14 +2,14 @@ import app from "./app";
 import DatabaseConnection from './config/database';
 import { config } from "./config";
 
-const PORT = config.port;
+const PORT = Number(config.port);
 
 async function startServer() {
   try {
     await DatabaseConnection.getInstance().connect();
     
-    app.listen(PORT, () => {
-      console.log(`Server running at http://localhost:${PORT}`);
+    app.listen(PORT, '0.0.0.0', () => {
+      console.log(`Server running on port ${PORT}`);
     });
   } catch (error) {
     console.error(
