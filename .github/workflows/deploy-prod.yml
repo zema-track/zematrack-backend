@@ -35,6 +35,14 @@ jobs:
         run: |
           sed -i "s|{{EXECUTION_ROLE_ARN}}|${{ secrets.ECS_EXECUTION_ROLE_ARN }}|g" ecs-task.json
           sed -i "s|{{TASK_ROLE_ARN}}|${{ secrets.ECS_TASK_ROLE_ARN }}|g" ecs-task.json
+          sed -i "s|replace-later|${{ secrets.ECR_REGISTRY }}/${{ secrets.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}|g" ecs-task.json
+
+          sed -i "s|{{PORT}}|${{ secrets.APP_PORT }}|g" ecs-task.json
+          sed -i "s|{{NODE_ENV}}|${{ secrets.NODE_ENV }}|g" ecs-task.json
+          sed -i "s|{{AWS_REGION}}|${{ secrets.AWS_REGION }}|g" ecs-task.json
+          sed -i "s|{{S3_BUCKET_NAME}}|${{ secrets.S3_BUCKET_NAME }}|g" ecs-task.json
+          sed -i "s|{{AWS_ACCESS_KEY_ID}}|${{ secrets.AWS_ACCESS_KEY_ID }}|g" ecs-task.json
+          sed -i "s|{{AWS_SECRET_ACCESS_KEY}}|${{ secrets.AWS_SECRET_ACCESS_KEY }}|g" ecs-task.json
           sed -i "s|{{MONGODB_URI_SECRET_ARN}}|${{ secrets.MONGODB_URI_SECRET_ARN }}|g" ecs-task.json
 
       - name: Render updated ECS task definition
