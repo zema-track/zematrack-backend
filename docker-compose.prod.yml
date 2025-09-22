@@ -17,7 +17,7 @@ services:
     ports:
       - "5000:5000"
     env_file:
-      - ./.env
+      - ./.env.production
     depends_on:
       - database
     restart: unless-stopped
