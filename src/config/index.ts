@@ -3,7 +3,7 @@ dotenv.config();
 
 export const config = {
   environment: process.env.NODE_ENV || 'development',
-  port: process.env.PORT || 3000,
+  port: process.env.PORT || 5000,
   mongodbUri: process.env.MONGODB_URI,
   AWS_ACCESS_KEY_ID: process.env.AWS_ACCESS_KEY_ID || '',
   AWS_SECRET_ACCESS_KEY: process.env.AWS_SECRET_ACCESS_KEY || '',
