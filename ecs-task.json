@@ -1,0 +1,28 @@
+{
+  "family": "zematrack-task",
+  "networkMode": "bridge",
+  "requiresCompatibilities": ["EC2"],
+  "memory": "512",
+  "cpu": "256",
+  "executionRoleArn": "{{EXECUTION_ROLE_ARN}}",
+  "taskRoleArn": "{{TASK_ROLE_ARN}}",
+  "containerDefinitions": [
+    {
+      "name": "backend",
+      "image": "latest",
+      "essential": true,
+      "portMappings": [
+        {
+          "containerPort": 5000,
+          "hostPort": 5000
+        }
+      ],
+      "secrets": [
+        {
+          "name": "MONGODB_URI",
+          "valueFrom": "{{MONGODB_URI_SECRET_ARN}}"
+        }
+      ]
+    }
+  ]
+}
