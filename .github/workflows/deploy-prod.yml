@@ -1,62 +1,65 @@
-name: Deploy ZemaTrack Backend to ECS
+name: Deploy ZemaTrack Backend to EC2
 
 on:
   push:
     branches:
       - main
+  repository_dispatch:
+    types: [deploy_backend]
+  workflow_dispatch:
 
 jobs:
-  deploy:
+  deploy-backend:
     runs-on: ubuntu-latest
+    env:
+      DEPLOY_DIR: /home/ubuntu/zematrack/zematrack-backend
+      APP_NAME: zematrack-backend
 
     steps:
-      - name: Checkout code
+      - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Configure AWS
-        uses: aws-actions/configure-aws-credentials@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
+          node-version: '22'
 
-      - name: Log in to ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v2
-
-      - name: Build and push Docker image
+      # Build on GitHub runner 
+      - name: Install & Build Project
         run: |
-          IMAGE_TAG=${GITHUB_SHA}
-          docker build -t ${{ secrets.ECR_REGISTRY }}/${{ secrets.ECR_REPOSITORY }}:$IMAGE_TAG .
-          docker push ${{ secrets.ECR_REGISTRY }}/${{ secrets.ECR_REPOSITORY }}:$IMAGE_TAG
-          echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
+          npm ci
+          npm run build
 
-      - name: Prepare ECS task definition
+      - name: Setup SSH Agent
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.VPS_SSH_KEY }}
+
+      # Sync files to VPS
+      - name: Transfer build Files to VPS
+              run: |
+                ssh -o StrictHostKeyChecking=no -p ${{ secrets.VPS_PORT }} \
+                  ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} "mkdir -p ${{env.DEPLOY_DIR}}"
+                
+                rsync -avz --delete --exclude=".env" -e "ssh -p ${{ secrets.VPS_PORT }}" \
+                  dist/ package*.json ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:${{env.DEPLOY_DIR}}
+
+      # Install dependencies on vps & restart via PM2
+      - name: Install Dependencies & Restart App
         run: |
-          sed -i "s|{{EXECUTION_ROLE_ARN}}|${{ secrets.ECS_EXECUTION_ROLE_ARN }}|g" ecs-task.json
-          sed -i "s|{{TASK_ROLE_ARN}}|${{ secrets.ECS_TASK_ROLE_ARN }}|g" ecs-task.json
-          sed -i "s|replace-later|${{ secrets.ECR_REGISTRY }}/${{ secrets.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}|g" ecs-task.json
+          ssh -p ${{ secrets.VPS_PORT }} ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << 'EOF'
+            set -e
+            cd $DEPLOY_DIR
 
-          sed -i "s|{{PORT}}|${{ secrets.APP_PORT }}|g" ecs-task.json
-          sed -i "s|{{NODE_ENV}}|${{ secrets.NODE_ENV }}|g" ecs-task.json
-          sed -i "s|{{AWS_REGION}}|${{ secrets.AWS_REGION }}|g" ecs-task.json
-          sed -i "s|{{S3_BUCKET_NAME}}|${{ secrets.S3_BUCKET_NAME }}|g" ecs-task.json
-          sed -i "s|{{AWS_ACCESS_KEY_ID}}|${{ secrets.AWS_ACCESS_KEY_ID }}|g" ecs-task.json
-          sed -i "s|{{AWS_SECRET_ACCESS_KEY}}|${{ secrets.AWS_SECRET_ACCESS_KEY }}|g" ecs-task.json
-          sed -i "s|{{MONGODB_URI_SECRET_ARN}}|${{ secrets.MONGODB_URI_SECRET_ARN }}|g" ecs-task.json
+            # Install production deps only
+            npm ci --omit=dev
 
-      - name: Render updated ECS task definition
-        id: task-def
-        uses: aws-actions/amazon-ecs-render-task-definition@v1
-        with:
-          task-definition: ecs-task.json
-          container-name: backend
-          image: ${{ secrets.ECR_REGISTRY }}/${{ secrets.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}
+            # Restart or start app with PM2
+            if pm2 describe $APP_NAME > /dev/null; then
+              pm2 restart $APP_NAME
+            else
+              NODE_ENV=production pm2 start dist/server.js --name $APP_NAME
+            fi
 
-      - name: Deploy ECS service
-        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
-        with:
-          task-definition: ${{ steps.task-def.outputs.task-definition }}
-          service: ${{ secrets.ECS_SERVICE_NAME }}
-          cluster: ${{ secrets.ECS_CLUSTER_NAME }}
-          wait-for-service-stability: true
+            pm2 save
+          EOF
