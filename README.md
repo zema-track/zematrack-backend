@@ -102,12 +102,12 @@ MONGODB_URI=mongodb://database:27017/zematrack  # database is the name of the Mo
 ```
 3. Build the Docker image
 ```bash
-docker compose build
+docker compose -f docker-compose.dev.yml build
 ```
 
 4. Start the Docker containers
 ```bash
-docker compose up
+docker compose -f docker-compose.dev.yml up
 ```
 The application will be available at http://localhost:3000
 
