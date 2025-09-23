@@ -63,7 +63,7 @@ jobs:
             if pm2 describe $APP_NAME > /dev/null; then
               pm2 restart ${{env.APP_NAME}}
             else
-              NODE_ENV=production pm2 start dist/server.js --name ${{env.APP_NAME}}
+              NODE_ENV=production pm2 start server.js --name ${{env.APP_NAME}}
             fi
 
             pm2 save
