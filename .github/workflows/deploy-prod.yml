@@ -47,7 +47,7 @@ jobs:
       # Install dependencies on vps & restart via PM2
       - name: Install Dependencies & Restart App
         run: |
-          ssh -p ${{ secrets.VPS_PORT }} ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << 'EOF'
+          ssh -p ${{ secrets.VPS_PORT }} ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << EOF
             set -e
 
             export NVM_DIR="$HOME/.nvm"
@@ -60,10 +60,10 @@ jobs:
             npm ci --omit=dev
 
             # Restart or start app with PM2
-            if pm2 describe $APP_NAME > /dev/null; then
-              pm2 restart ${{env.APP_NAME}}
+            if pm2 describe ${{ env.APP_NAME }} > /dev/null; then
+              pm2 restart ${{ env.APP_NAME }}
             else
-              NODE_ENV=production pm2 start server.js --name ${{env.APP_NAME}}
+              pm2 start server.js --name ${{ env.APP_NAME }}
             fi
 
             pm2 save
