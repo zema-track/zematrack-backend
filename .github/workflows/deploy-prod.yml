@@ -49,20 +49,21 @@ jobs:
         run: |
           ssh -p ${{ secrets.VPS_PORT }} ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << 'EOF'
             set -e
-            
+
             export NVM_DIR="$HOME/.nvm"
             [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
 
-            cd $DEPLOY_DIR
+            cd ${{env.DEPLOY_DIR}}
+            echo "Deploying to ${{env.DEPLOY_DIR}}"
 
             # Install production deps only
             npm ci --omit=dev
 
             # Restart or start app with PM2
             if pm2 describe $APP_NAME > /dev/null; then
-              pm2 restart $APP_NAME
+              pm2 restart ${{env.APP_NAME}}
             else
-              NODE_ENV=production pm2 start dist/server.js --name $APP_NAME
+              NODE_ENV=production pm2 start dist/server.js --name ${{env.APP_NAME}}
             fi
 
             pm2 save
