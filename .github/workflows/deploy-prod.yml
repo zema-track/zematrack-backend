@@ -37,12 +37,12 @@ jobs:
 
       # Sync files to VPS
       - name: Transfer build Files to VPS
-              run: |
-                ssh -o StrictHostKeyChecking=no -p ${{ secrets.VPS_PORT }} \
-                  ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} "mkdir -p ${{env.DEPLOY_DIR}}"
-                
-                rsync -avz --delete --exclude=".env" -e "ssh -p ${{ secrets.VPS_PORT }}" \
-                  dist/ package*.json ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:${{env.DEPLOY_DIR}}
+        run: |
+          ssh -o StrictHostKeyChecking=no -p ${{ secrets.VPS_PORT }} \
+            ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} "mkdir -p ${{env.DEPLOY_DIR}}"
+          
+          rsync -avz --delete --exclude=".env" -e "ssh -p ${{ secrets.VPS_PORT }}" \
+            dist/ package*.json ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:${{env.DEPLOY_DIR}}
 
       # Install dependencies on vps & restart via PM2
       - name: Install Dependencies & Restart App
